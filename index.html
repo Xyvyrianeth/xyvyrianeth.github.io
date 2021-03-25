@@ -1,17 +1,20 @@
 <!DOCTYPE html>
+<!--TODO: Make the size of the engine vary with window size-->
 <body oncontextmenu="return false">
-    <canvas id="conway" height=900 width=900></canvas>
+    <canvas id="conway" height=948 width=948></canvas>
     <div id="player">
         <text   class="left">PLAYER</text>
         <text   class="right">CANVAS</text><br>
-        <button class="left  player"  id="pause" onclick="ruleChange(0); blur()"      title="Start the engine" oncontextmenu="blur()">PLAY</button>
-        <button class="right  player"            onclick="random(); blur()"           title="Randomize the activity of every cell in the canvas" oncontextmenu="blur()">RANDOM</button><br>
-        <button class="left  player"             onclick="table.frame = true; blur()" title="Generate the next frame (engine must be paused)" oncontextmenu="blur()">STEP</button>
-        <button class="right  player" id="clear" onclick="blur()"                     title="Set all cells to inactive" oncontextmenu="blur()">CLEAR</button><br>
+        <button class="left  player"  id="pause"  onclick="ruleChange(0); blur()"      title="Start the engine" oncontextmenu="blur()">PLAY</button>
+        <button class="right  player"             onclick="random(); blur()"           title="Randomize the activity of every cell in the canvas" oncontextmenu="blur()">RANDOM</button><br>
+        <button class="left  player"              onclick="table.frame = true; blur()" title="Generate the next frame (engine must be paused)" oncontextmenu="blur()">STEP</button>
+        <button class="right  player" id="clear"  onclick="blur()"                     title="Set all cells to inactive" oncontextmenu="blur()">CLEAR</button><br>
+        <button class="speed  button" id="speed"  onclick="blur()"                     title="Set how many frames per second (FPS) the engine runs in" oncontextmenu="blur()" disabled>60 FPS</button>
+        <input  class="slider"        id="slider" onclick="blur()" oninput="ruleChange(19);" type="range" min="10" max="100" value="60"><br><br>
         <text   class="middle">CELL COUNT</text><br>
         <button class="middle"        id="activeCount"   title="Active Cells" oncontextmenu="blur()" disabled>0</button>
-        <button class="middle"        id="inactiveCount" title="Inactive Cells" oncontextmenu="blur()" disabled>0</button><br>
-        TABLE AND SETTINGS<br>
+        <button class="middle"        id="inactiveCount" title="Inactive Cells" oncontextmenu="blur()" disabled>0</button><br><br>
+        RULES OF LIFE<br>
         <div    class="left activation">
         <button class="setting"    title="For a given active cell, the number of adjacent cells that must be active for it to become inactive" oncontextmenu="blur()" disabled>DEATH</button>
         <button class="rule true"  id="death1" onclick="ruleChange(1); blur()" title="Active active cells with 0 active adjacent cells will become inactive" oncontextmenu="blur()">0</button>
@@ -36,13 +39,10 @@
         <button class="rule false" id="birth8" onclick="ruleChange(17); blur()" title="Active inactive cells with 7 active adjacent cells will become active" oncontextmenu="blur()">7</button>
         <button class="rule false" id="birth9" onclick="ruleChange(18); blur()" title="Active inactive cells with 8 active adjacent cells will become active" oncontextmenu="blur()">8</button><br>
         </div>
-        <button class="middle setting true"     id="wrap"   onclick="ruleChange(21); blur()" title="Cells ignore the canvas borders and are able to affect cells on the opposite edge" oncontextmenu="blur()">WRAP</button><br>
-        <button class="middle setting false"    id="grid"   onclick="ruleChange(24); blur()" title="All cells have a light border around them" oncontextmenu="blur()">GRID</button><br>
-        <button class="middle setting nocolor"  id="color"  onclick="ruleChange(22); blur()" title="Change the color of active cells that have been active for fewer than 16 frames&#10;* May impact framerate" oncontextmenu="ruleChange(23); blur()">COLOR</button><br>
-        <button class="middle setting true"     id="invert" onclick="preset(); blur()"       title="Enable all inactive table and disable all active table" oncontextmenu="blur()">INVERT</button><br>
-        <button class="middle speed"                        onclick="ruleChange(19); blur()" title="Increase the FPS" oncontextmenu="blur()">+</button>
-        <button class="middle setting"          id="speed"                                   title="How many frames per second (FPS) are rendered" oncontextmenu="blur()" disabled>60 FPS</button>
-        <button class="middle speed"                        onclick="ruleChange(20); blur()" title="Decrease the FPS" oncontextmenu="blur()">-</button><br>
+        <button class="middle setting true"     id="wrap"   onclick="ruleChange(20); blur()" title="Cells ignore the canvas borders and are able to affect cells on the opposite edge" oncontextmenu="blur()">WRAP</button><br>
+        <button class="middle setting false"    id="grid"   onclick="ruleChange(23); blur()" title="All cells have a light border around them" oncontextmenu="blur()">GRID</button><br>
+        <button class="middle setting nocolor"  id="color"  onclick="ruleChange(21); blur()" title="Change the color of active cells that have been active for fewer than 16 frames&#10;* May impact framerate" oncontextmenu="ruleChange(22); blur()">COLOR</button><br>
+        <button class="middle setting true"     id="invert" onclick="preset(); blur()"       title="Enable all inactive table and disable all active table" oncontextmenu="blur()">INVERT</button><br><br>
         RULE PRESETS<br>
         <button class="left"  onclick="preset(0); blur()"  oncontextmenu="blur()">LIFE</button>
         <button class="right" onclick="preset(1); blur()"  oncontextmenu="blur()">INVERTED LIFE</button><br>
@@ -59,15 +59,18 @@
     </div>
 </body>
 <html>
+    <title>Conway's Game of Life - hover over buttons for a description of what they do</title>
     <style>
         body { user-select: none; }
         button {
-            background-color: #bcf;
+            background-color: #8ee;
+            border-color: #7cc;
             border-radius: 5px;
-            border-color: #abf;
             color: #000;
             font-size: 28px;
-            height: 38px; }
+            height: 38px;
+            cursor: pointer;
+            outline: none; }
         canvas {
             border-width: 2px;
             border-style: outset;
@@ -75,6 +78,7 @@
             border-radius: 3px; }
         #activeCount {
             background-color: #000;
+            border-color: #666;
             color: #fff;
             width: 100px; }
         #color.dark {
@@ -128,15 +132,19 @@
         #color.rainbow {
             background-image: linear-gradient(to right, #f00, #aa0, #0f0, #0aa, #00f, #808, #000);
             color: #fff; }
+        #color.rainbowInvert {
+            background-image: linear-gradient(to right, #808, #00f, #0aa, #0f0, #aa0, #f00, #000);
+            color: #fff; }
         #dotCount { background-image: linear-gradient(to right, #111, #fff); }
         #inactiveCount {
             background-color: #fff;
+            border-color: #aaa;
             color: #000;
             width: 100px; }
         #player {
             position: fixed;
             top: 8px;
-            left: 915px;
+            left: 963px;
             width: 400px;
             text-align: center;
             line-height: 40px;
@@ -172,7 +180,26 @@
             padding: 0px;
             white-space: nowrap;
             width: 120px; }
-        .speed { width: 38px; }
+        .slider {
+            -webkit-appearance: none;
+            width: 250px;
+            height: 15px;
+            border-radius: 5px;
+            background: #d3d3d3;
+            outline: none;
+        }
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 25px;
+            height: 25px;
+            background: #8ee;
+            border-color: #f00;
+            border-width: 2px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .speed { width: 125px; }
         .true { background-color: #7fff00; }
     </style>
     <script>
@@ -192,16 +219,16 @@
         }
 
         draw = () => {
-            let data = ctx.getImageData(0, 0, 900, 900);
+            let data = ctx.getImageData(0, 0, 948, 948);
             let count = [0, 0];
-            for (let y = 150; y--;)
+            for (let y = 158; y--;)
             {
-                for (let x = 150; x--;)
+                for (let x = 158; x--;)
                 {
                     let a = table.board[y][x];
                     for (let i = 0; i < 36; i++)
                     {
-                        data.data[((y * 6 + (i / 6 | 0)) * 900 + (x * 6 + (i % 6))) * 4 + 3] = 255;
+                        data.data[((y * 6 + (i / 6 | 0)) * 948 + (x * 6 + (i % 6))) * 4 + 3] = 255;
 
                         let r, g, b;
                         switch (table.color)
@@ -258,20 +285,20 @@
                                     g = a > 0 ? Math.sin(((16 - a) * Math.PI) / 10) * 255 : 255;
                                     b = a > 0 ? a >= 7 ? Math.sin(((a - 6) * Math.PI) / 10) * 255 * (a >= 12 ? (5 - (a - 11)) / 5 : 1) : 0 : 255; break;
                         }
-                        data.data[((y * 6 + (i / 6 | 0)) * 900 + (x * 6 + (i % 6))) * 4 + 0] = r;
-                        data.data[((y * 6 + (i / 6 | 0)) * 900 + (x * 6 + (i % 6))) * 4 + 1] = g;
-                        data.data[((y * 6 + (i / 6 | 0)) * 900 + (x * 6 + (i % 6))) * 4 + 2] = b;
+                        data.data[((y * 6 + (i / 6 | 0)) * 948 + (x * 6 + (i % 6))) * 4 + 0] = r;
+                        data.data[((y * 6 + (i / 6 | 0)) * 948 + (x * 6 + (i % 6))) * 4 + 1] = g;
+                        data.data[((y * 6 + (i / 6 | 0)) * 948 + (x * 6 + (i % 6))) * 4 + 2] = b;
 
                         if (table.grid)
                             if (i < 6 || i > 29 ||i % 6 == 0 || i % 6 == 5)
                             {
-                                data.data[((y * 6 + (i / 6 | 0)) * 900 + (x * 6 + (i % 6))) * 4 + 0] += 100;
-                                data.data[((y * 6 + (i / 6 | 0)) * 900 + (x * 6 + (i % 6))) * 4 + 1] += 100;
-                                data.data[((y * 6 + (i / 6 | 0)) * 900 + (x * 6 + (i % 6))) * 4 + 2] += 100;
-                                data.data[((y * 6 + (i / 6 | 0)) * 900 + (x * 6 + (i % 6))) * 4 + 3] = 255;
-                                data.data[((y * 6 + (i / 6 | 0)) * 900 + (x * 6 + (i % 6))) * 4 + 0] /= 2;
-                                data.data[((y * 6 + (i / 6 | 0)) * 900 + (x * 6 + (i % 6))) * 4 + 1] /= 2;
-                                data.data[((y * 6 + (i / 6 | 0)) * 900 + (x * 6 + (i % 6))) * 4 + 2] /= 2;
+                                data.data[((y * 6 + (i / 6 | 0)) * 948 + (x * 6 + (i % 6))) * 4 + 0] += 100;
+                                data.data[((y * 6 + (i / 6 | 0)) * 948 + (x * 6 + (i % 6))) * 4 + 1] += 100;
+                                data.data[((y * 6 + (i / 6 | 0)) * 948 + (x * 6 + (i % 6))) * 4 + 2] += 100;
+                                data.data[((y * 6 + (i / 6 | 0)) * 948 + (x * 6 + (i % 6))) * 4 + 3] = 255;
+                                data.data[((y * 6 + (i / 6 | 0)) * 948 + (x * 6 + (i % 6))) * 4 + 0] /= 2;
+                                data.data[((y * 6 + (i / 6 | 0)) * 948 + (x * 6 + (i % 6))) * 4 + 1] /= 2;
+                                data.data[((y * 6 + (i / 6 | 0)) * 948 + (x * 6 + (i % 6))) * 4 + 2] /= 2;
                             }
 
                         if (table.cursor && (
@@ -284,10 +311,10 @@
                             (x == table.cursor[0] + 1 && y == table.cursor[1] - 1 && i == 30) ||
                             (x == table.cursor[0] - 1 && y == table.cursor[1] - 1 && i == 35)))
                             {
-                                data.data[((y * 6 + (i / 6 | 0)) * 900 + (x * 6 + (i % 6))) * 4 + 0] = a > 0 ? 255 - data.data[((y * 6 + (i / 6 | 0)) * 900 + (x * 6 + (i % 6))) * 4 + 0] : 0;
-                                data.data[((y * 6 + (i / 6 | 0)) * 900 + (x * 6 + (i % 6))) * 4 + 1] = a > 0 ? 255 - data.data[((y * 6 + (i / 6 | 0)) * 900 + (x * 6 + (i % 6))) * 4 + 1] : 0;
-                                data.data[((y * 6 + (i / 6 | 0)) * 900 + (x * 6 + (i % 6))) * 4 + 2] = a > 0 ? 255 - data.data[((y * 6 + (i / 6 | 0)) * 900 + (x * 6 + (i % 6))) * 4 + 2] : 0;
-                                data.data[((y * 6 + (i / 6 | 0)) * 900 + (x * 6 + (i % 6))) * 4 + 3] = 255;
+                                data.data[((y * 6 + (i / 6 | 0)) * 948 + (x * 6 + (i % 6))) * 4 + 0] = a > 0 ? 255 - data.data[((y * 6 + (i / 6 | 0)) * 948 + (x * 6 + (i % 6))) * 4 + 0] : 0;
+                                data.data[((y * 6 + (i / 6 | 0)) * 948 + (x * 6 + (i % 6))) * 4 + 1] = a > 0 ? 255 - data.data[((y * 6 + (i / 6 | 0)) * 948 + (x * 6 + (i % 6))) * 4 + 1] : 0;
+                                data.data[((y * 6 + (i / 6 | 0)) * 948 + (x * 6 + (i % 6))) * 4 + 2] = a > 0 ? 255 - data.data[((y * 6 + (i / 6 | 0)) * 948 + (x * 6 + (i % 6))) * 4 + 2] : 0;
+                                data.data[((y * 6 + (i / 6 | 0)) * 948 + (x * 6 + (i % 6))) * 4 + 3] = 255;
                             }
                     }
 
@@ -303,10 +330,10 @@
         }
         random = () => {
             table.board = [];
-            for (let y = 150; y--;)
+            for (let y = 158; y--;)
             {
                 let a = [];
-                for (let x = 150; x--;)
+                for (let x = 158; x--;)
                 {
                     let b = Math.random() * 2 | 0;
                     a.push(b);
@@ -316,10 +343,10 @@
         }
         clear = () => {
             table.board = [];
-            for (let y = 150; y--;)
+            for (let y = 158; y--;)
             {
                 let a = [];
-                for (let x = 150; x--;)
+                for (let x = 158; x--;)
                     a.push(0);
                 table.board.push(a);
             }
@@ -330,22 +357,22 @@
                 table.frame = false;
                 let clone = [];
                 ctx.scale(1 / 3, 1 / 3);
-                for (let y = 0; y < 150; y++)
+                for (let y = 0; y < 158; y++)
                 {
                     let a = [];
-                    for (let x = 0; x < 150; x++)
+                    for (let x = 0; x < 158; x++)
                     {
                         let adj = 0;
                         let b;
                         for (let d = 0; d < 8; d++)
                         {
                             if (table.wrap)
-                                adj += table.board[y + [y == 0 ? 149 : -1, y == 0 ? 149 : -1, 0, y == 149 ? -149 : 1, y == 149 ? -149 : 1, y == 149 ? -149 : 1, 0, y == 0 ? 149 : -1][d]][x + [0, x  == 149 ? -149 : 1, x  == 149 ? -149 : 1, x  == 149 ? -149 : 1, 0, x == 0 ? 149 : -1, x == 0 ? 149 : -1, x == 0 ? 149 : -1][d]] > 0 ? 1 : 0;
+                                adj += table.board[y + [y == 0 ? 157 : -1, y == 0 ? 157 : -1, 0, y == 157 ? -157 : 1, y == 157 ? -157 : 1, y == 157 ? -157 : 1, 0, y == 0 ? 157 : -1][d]][x + [0, x  == 157 ? -157 : 1, x  == 157 ? -157 : 1, x  == 157 ? -157 : 1, 0, x == 0 ? 157 : -1, x == 0 ? 157 : -1, x == 0 ? 157 : -1][d]] > 0 ? 1 : 0;
                             else
                             if (!((y == 0   && [0, 1, 7].includes(d)) ||
-                                (y == 149 && [3, 4, 5].includes(d)) ||
+                                (y == 157 && [3, 4, 5].includes(d)) ||
                                 (x == 0   && [5, 6, 7].includes(d)) ||
-                                (x == 149 && [1, 2, 3].includes(d))))
+                                (x == 157 && [1, 2, 3].includes(d))))
                                 adj += table.board[y + [-1, -1, 0, 1, 1, 1, 0, -1][d]][x + [0, 1, 1, 1, 0, -1, -1, -1][d]] > 0 ? 1 : 0;
                         }
                         if (table.board[y][x] > 0 && table.death[adj])
@@ -371,8 +398,7 @@
             setTimeout(() => step(), 1000 / table.speed);
         }
         ruleChange = (rule) => {
-            // PAUSE
-            if (rule == 0)
+            if (rule == 0) // PAUSE
             {
                 pause = document.getElementById("pause");
                 table.paused = !table.paused;
@@ -386,9 +412,9 @@
                     pause.innerText = "PAUSE";
                     pause.title = "Stop the engine";
                 }
+                return;
             }
-            // ACTIVATION RULES
-            if (rule > 0 && rule < 19)
+            if (rule > 0 && rule < 19) // ACTIVATION RULES
             {
                 if (rule < 10)
                 {
@@ -404,74 +430,45 @@
                     birth.classList.remove(!table.birth[rule - 10]);
                     birth.classList.add(table.birth[rule - 10]);
                 }
+                return;
             }
-            // SPEED +
-            if (rule == 19 && table.speed < 100)
+            if (rule == 19) // SPEED
             {
-                if (table.speed >= 60)
-                    table.speed += 10
-                else
-                if (table.speed >= 40)
-                    table.speed += 5;
-                else
-                if (table.speed >= 20)
-                    table.speed += 4;
-                else
-                if (table.speed >= 8)
-                    table.speed += 2;
-                else
-                    table.speed += 1;
+                table.speed = document.getElementById("slider").value;
                 document.getElementById("speed").innerText = table.speed + " FPS";
+                return;
             }
-            // SPEED -
-            if (rule == 20 && table.speed > 1)
-            {
-                if (table.speed > 60)
-                    table.speed -= 10
-                else
-                if (table.speed > 40)
-                    table.speed -= 5;
-                else
-                if (table.speed > 20)
-                    table.speed -= 4;
-                else
-                if (table.speed > 8)
-                    table.speed -= 2;
-                else
-                    table.speed -= 1;
-                document.getElementById("speed").innerText = table.speed + " FPS";
-            }
-            // WRAP
-            if (rule == 21)
+            if (rule == 20) // WRAP
             {
                 let wrap = document.getElementById("wrap");
                 table.wrap = !table.wrap;
                 wrap.classList.remove(!table.wrap);
                 wrap.classList.add(table.wrap);
+                return;
             }
-            // COLOR NEXT
-            if (rule == 22)
+            if (rule == 21) // COLOR NEXT
             {
                 let color = document.getElementById("color");
                 table.color = table.color == 17 ? 0 : table.color + 1;
                 color.classList.remove(["rainbow", "rainbowinvert", "nocolor", "invert", "dark", "darkinvert", "redlight", "greenlight", "bluelight", "reddark", "greendark", "bluedark", "redlightinvert", "greenlightinvert", "bluelightinvert", "reddarkinvert", "greendarkinvert", "bluedarkinvert"][table.color]);
                 color.classList.add(["nocolor", "invert", "dark", "darkinvert", "redlight", "greenlight", "bluelight", "reddark", "greendark", "bluedark", "redlightinvert", "greenlightinvert", "bluelightinvert", "reddarkinvert", "greendarkinvert", "bluedarkinvert", "rainbow", "rainbowinvert"][table.color]);
+                return;
             }
-            // COLOR PREV
-            if (rule == 23)
+            if (rule == 22) // COLOR PREV
             {
                 let color = document.getElementById("color");
                 table.color = table.color == 0 ? 17 : table.color - 1;
                 color.classList.remove(["invert", "dark", "darkinvert", "redlight", "greenlight", "bluelight", "reddark", "greendark", "bluedark", "redlightinvert", "greenlightinvert", "bluelightinvert", "reddarkinvert", "greendarkinvert", "bluedarkinvert", "rainbow", "rainbowinvert", "nocolor"][table.color]);
                 color.classList.add(["nocolor", "invert", "dark", "darkinvert", "redlight", "greenlight", "bluelight", "reddark", "greendark", "bluedark", "redlightinvert", "greenlightinvert", "bluelightinvert", "reddarkinvert", "greendarkinvert", "bluedarkinvert", "rainbow", "rainbowinvert"][table.color]);
+                return;
             }
-            // GRID
-            if (rule == 24)
+            if (rule == 23) // GRID
             {
                 let grid = document.getElementById("grid");
                 table.grid = !table.grid;
                 grid.classList.remove(!table.grid);
                 grid.classList.add(table.grid);
+                return;
             }
         }
         preset = (a) => {
@@ -563,7 +560,7 @@
             }
         }
 
-                                document.getElementById("clear").addEventListener("click", () => clear());
+        document.getElementById("clear").addEventListener("click", () => clear());
         document.addEventListener("keydown", (e) => {
             switch (e.key)
             {
@@ -571,17 +568,17 @@
             }
         });
         convas.addEventListener("mousemove", (e) => {
-                                                findxy('move', e)
-                                }, false);
-                                convas.addEventListener("mousedown", (e) => {
+            findxy('move', e)
+        }, false);
+        convas.addEventListener("mousedown", (e) => {
             findxy('down', e);
             blur();
-                                }, false);
-                                convas.addEventListener("mouseup", (e) => {
-                                                findxy('up', e)
-                                }, false);
-                                convas.addEventListener("mouseout", (e) => {
-                                                findxy('out', e)
+        }, false);
+        convas.addEventListener("mouseup", (e) => {
+            findxy('up', e)
+        }, false);
+        convas.addEventListener("mouseout", (e) => {
+            findxy('out', e)
         }, false);
         findxy = (res, e) => {
             if (res == 'down') {
