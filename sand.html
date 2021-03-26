@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<!--TODO: Make the size of the engine vary with window size-->
+<body oncontextmenu="return false">
+    <canvas id="conway" height=948 width=948></canvas>
+    <div id="player">
+        <text   class="left">PLAYER</text>
+        <text   class="right">CANVAS</text><br>
+        <button class="left  player"  id="pause"  onclick="ruleChange(0); blur()"      title="Start the engine" oncontextmenu="blur()">PLAY</button>
+        <button class="right  player"             onclick="random(); blur()"           title="Randomize the activity of every cell in the canvas" oncontextmenu="blur()">RANDOM</button><br>
+        <button class="left  player"              onclick="table.frame = true; blur()" title="Generate the next frame (engine must be paused)" oncontextmenu="blur()">TOPPLE</button>
+        <button class="right  player" id="clear"  onclick="blur()"                     title="Set all cells to inactive" oncontextmenu="blur()">CLEAR</button><br>
+        <button class="speed  button" id="speed"  onclick="blur()"                     title="Set how many frames per second (FPS) the engine runs in" oncontextmenu="blur()" disabled>60 FPS</button>
+        <input  class="slider"        id="slider" onclick="blur()" oninput="ruleChange(3);" type="range" min="10" max="100" value="60"><br><br>
+        <text   class="left">TOTAL SAND</text>
+        <button class="right"         id="count"                                       title="Active Cells" oncontextmenu="blur()" disabled>0</button><br>
+        <text   class="left">LARGEST PILE</text>
+        <button class="right"         id="largest"                                     title="Active Cells" oncontextmenu="blur()" disabled>0</button><br><br>
+        <text   class="middle">TOPPLE SETTING</text><br>
+        <button class="middle setting nocolor"  id="topple" onclick="ruleChange(1); blur()" oncontextmenu="ruleChange(2); blur()" title="If a pile has more than 3 sand, it will give one to each adjacent cell every frame">SLOW</button><br><br>
+        <button class="middle setting true"     id="wrap"   onclick="ruleChange(4); blur()" oncontextmenu="blur()"                title="Cells ignore the canvas borders and are able to affect cells on the opposite edge">WRAP</button><br>
+        <button class="middle setting false"    id="grid"   onclick="ruleChange(7); blur()" oncontextmenu="blur()"                title="All cells have a light border around them">GRID</button><br>
+        <button class="middle setting nocolor"  id="color"  onclick="ruleChange(5); blur()" oncontextmenu="ruleChange(6); blur()" title="Change the color of piles based on size">COLOR</button><br>
+    </div>
+</body>
+<html>
+    <title>Sand Pile Engine - hover over buttons for a description of what they do</title>
+    <style>
+        body { user-select: none; }
+        button {
+            background-color: #8ee;
+            border-color: #7cc;
+            border-radius: 5px;
+            color: #000;
+            font-size: 28px;
+            height: 38px;
+            cursor: pointer;
+            outline: none; }
+        canvas {
+            border-width: 2px;
+            border-style: outset;
+            border-color: #abc;
+            border-radius: 3px; }
+        #activeCount {
+            background-color: #000;
+            border-color: #666;
+            color: #fff;
+            width: 100px; }
+        #color.dark {
+            background-image: linear-gradient(to right, #eee, #000);
+            color: #fff; }
+        #color.invert {
+            background-color: #fff;
+            color: #000; }
+        #color.darkinvert {
+            background-image: linear-gradient(to left, #eee, #000);
+            color: #fff; }
+        #color.redlight {
+            background-image: linear-gradient(to right, #fdd, #f00, #000);
+            color: #fff; }
+        #color.reddark {
+            background-image: linear-gradient(to right,#f00, #000);
+            color: #fff; }
+        #color.redlightinvert {
+            background-image: linear-gradient(to left, #fdd, #f00);
+            color: #fff; }
+        #color.reddarkinvert {
+            background-image: linear-gradient(to left,#f00, #000);
+            color: #fff; }
+        #color.greenlight {
+            background-image: linear-gradient(to right, #dfd, #0f0, #000);
+            color: #fff; }
+        #color.greendark {
+            background-image: linear-gradient(to right,#0f0, #000);
+            color: #fff; }
+        #color.greenlightinvert {
+            background-image: linear-gradient(to left, #dfd, #0f0);
+            color: #fff; }
+        #color.greendarkinvert {
+            background-image: linear-gradient(to left,#0f0, #000);
+            color: #fff; }
+        #color.bluelight {
+            background-image: linear-gradient(to right, #ddf, #00f, #000);
+            color: #fff; }
+        #color.bluedark {
+            background-image: linear-gradient(to right,#00f, #000);
+            color: #fff; }
+        #color.bluelightinvert {
+            background-image: linear-gradient(to left, #ddf, #00f);
+            color: #fff; }
+        #color.bluedarkinvert {
+            background-image: linear-gradient(to left,#00f, #000);
+            color: #fff; }
+        #color.nocolor {
+            background-color: #000;
+            color: #fff; }
+        #color.rainbow {
+            background-image: linear-gradient(to right, #f00, #aa0, #0f0, #0aa, #00f, #808, #000);
+            color: #fff; }
+        #color.rainbowInvert {
+            background-image: linear-gradient(to right, #808, #00f, #0aa, #0f0, #aa0, #f00, #000);
+            color: #fff; }
+        #dotCount { background-image: linear-gradient(to right, #111, #fff); }
+        #player {
+            position: fixed;
+            top: 8px;
+            left: 963px;
+            width: 400px;
+            text-align: center;
+            line-height: 40px;
+            font-size: 200%; }
+        #sandCount {
+            background-color: rgb(240, 220, 100);
+            border-color: rgb(220, 200, 80) }
+        .activation {
+            background-color: #789;
+            width: 120px;
+            height: 162px;
+            border-radius: 5px 5px 4px 4px; }
+        .activation > .setting {
+            position: relative;
+            top: -3px; }
+        .activation > .rule {
+            position: relative;
+            top: -3px;
+            width: 38px;
+            margin: 1px -3px 0px -3px; }
+        .false { background-color: #dc143c; }
+        .left {
+            position: absolute;
+            left: 0px; }
+        .middle {
+            position: relative;
+            right: 4px;
+            bottom: 3px; }
+        .player {
+            width: 140px;
+            text-align: center; }
+        .right {
+            position: absolute;
+            right: 8px; }
+        .setting {
+            padding: 0px;
+            white-space: nowrap;
+            width: 120px; }
+        .slider {
+            -webkit-appearance: none;
+            width: 250px;
+            height: 15px;
+            border-radius: 5px;
+            background: #d3d3d3;
+            outline: none;
+        }
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 25px;
+            height: 25px;
+            background: #8ee;
+            border-color: #f00;
+            border-width: 2px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .speed { width: 125px; }
+        .true { background-color: #7fff00; }
+    </style>
+    <script>
+        var convas = document.getElementById("conway");
+        var ctx = convas.getContext("2d");
+        var table = {
+            birth: [false, false, false, true, false, false, false, false, false],
+            board: [],
+            color: 0,
+            cursor: false,
+            death: [true, true, false, false, true, true, true, true, true],
+            drawType: 0,
+            grid: false,
+            paused: true,
+            speed: 60,
+            topple: 0,
+            wrap: true
+        }
+
+        draw = () => {
+            let data = ctx.getImageData(0, 0, 948, 948);
+            for (let y = 158; y--;)
+            {
+                for (let x = 158; x--;)
+                {
+                    let pile = table.board[y][x];
+                    if (pile > 3)
+                        pile = 4;
+                    for (let i = 0; i < 36; i++)
+                    {
+                        data.data[((y * 6 + (i / 6 | 0)) * 948 + (x * 6 + (i % 6))) * 4 + 3] = 255;
+                        let r, g, b;
+                        [r, g, b] = [
+                            [[255, 255, 255], [255, 0, 0], [0, 255, 0], [0, 0, 255], [0, 0, 0]],
+                            [] ][table.color][pile];
+                        data.data[((y * 6 + (i / 6 | 0)) * 948 + (x * 6 + (i % 6))) * 4 + 0] = r;
+                        data.data[((y * 6 + (i / 6 | 0)) * 948 + (x * 6 + (i % 6))) * 4 + 1] = g;
+                        data.data[((y * 6 + (i / 6 | 0)) * 948 + (x * 6 + (i % 6))) * 4 + 2] = b;
+
+                        if (table.grid)
+                            if (i < 6 || i > 29 ||i % 6 == 0 || i % 6 == 5)
+                            {
+                                data.data[((y * 6 + (i / 6 | 0)) * 948 + (x * 6 + (i % 6))) * 4 + 0] += 100;
+                                data.data[((y * 6 + (i / 6 | 0)) * 948 + (x * 6 + (i % 6))) * 4 + 1] += 100;
+                                data.data[((y * 6 + (i / 6 | 0)) * 948 + (x * 6 + (i % 6))) * 4 + 2] += 100;
+                                data.data[((y * 6 + (i / 6 | 0)) * 948 + (x * 6 + (i % 6))) * 4 + 3] = 255;
+                                data.data[((y * 6 + (i / 6 | 0)) * 948 + (x * 6 + (i % 6))) * 4 + 0] /= 2;
+                                data.data[((y * 6 + (i / 6 | 0)) * 948 + (x * 6 + (i % 6))) * 4 + 1] /= 2;
+                                data.data[((y * 6 + (i / 6 | 0)) * 948 + (x * 6 + (i % 6))) * 4 + 2] /= 2;
+                            }
+
+                        if (table.cursor && (
+                            (x == table.cursor[0] + 1 && y == table.cursor[1] && i % 6 < 2) ||
+                            (x == table.cursor[0] - 1 && y == table.cursor[1] && i % 6 > 3) ||
+                            (y == table.cursor[1] + 1 && x == table.cursor[0] && i < 12) ||
+                            (y == table.cursor[1] - 1 && x == table.cursor[0] && i > 23) ||
+                            (x == table.cursor[0] + 1 && y == table.cursor[1] + 1 && i == 0) ||
+                            (x == table.cursor[0] - 1 && y == table.cursor[1] + 1 && i == 5) ||
+                            (x == table.cursor[0] + 1 && y == table.cursor[1] - 1 && i == 30) ||
+                            (x == table.cursor[0] - 1 && y == table.cursor[1] - 1 && i == 35)))
+                            {
+                                data.data[((y * 6 + (i / 6 | 0)) * 948 + (x * 6 + (i % 6))) * 4 + 0] = pile > 0 ? 255 - data.data[((y * 6 + (i / 6 | 0)) * 948 + (x * 6 + (i % 6))) * 4 + 0] : 0;
+                                data.data[((y * 6 + (i / 6 | 0)) * 948 + (x * 6 + (i % 6))) * 4 + 1] = pile > 0 ? 255 - data.data[((y * 6 + (i / 6 | 0)) * 948 + (x * 6 + (i % 6))) * 4 + 1] : 0;
+                                data.data[((y * 6 + (i / 6 | 0)) * 948 + (x * 6 + (i % 6))) * 4 + 2] = pile > 0 ? 255 - data.data[((y * 6 + (i / 6 | 0)) * 948 + (x * 6 + (i % 6))) * 4 + 2] : 0;
+                                data.data[((y * 6 + (i / 6 | 0)) * 948 + (x * 6 + (i % 6))) * 4 + 3] = 255;
+                            }
+                    }
+                }
+            }
+            let count = 0;
+            let largest = 0;
+            for (let y = 0; y < 158; y++)
+                for (let x = 0; x < 158; x++)
+                {
+                    count += table.board[y][x];
+                    if (table.board[y][x] > largest)
+                        largest = table.board[y][x];
+                }
+            document.getElementById("count").innerText = count;
+            document.getElementById("largest").innerText = largest;
+            ctx.putImageData(data, 0, 0);
+        }
+        random = () => {
+            table.board = [];
+            for (let y = 158; y--;)
+            {
+                let a = [];
+                for (let x = 158; x--;)
+                {
+                    let b = Math.random() * 4 | 0;
+                    a.push(b);
+                }
+                table.board.push(a);
+            }
+        }
+        clear = () => {
+            table.board = [];
+            for (let y = 158; y--;)
+            {
+                let a = [];
+                for (let x = 158; x--;)
+                    a.push(0);
+                table.board.push(a);
+            }
+        }
+        start = () => {
+            table.board = [];
+            for (let y = 0; y < 158; y++)
+            {
+                let Y = [];
+                for (let x = 0; x < 158; x++)
+                    Y.push(0);
+                table.board.push(Y);
+            }
+            table.board[78][78] = 2 ** 13;
+            table.board[78][79] = 2 ** 13;
+            table.board[79][78] = 2 ** 13;
+            table.board[79][79] = 2 ** 13;
+        }
+        topple = () => {
+            if (!table.paused || table.frame)
+            {
+                table.frame = false;
+                let clone = [];
+                ctx.scale(1 / 3, 1 / 3);
+                for (let y = 0; y < 158; y++)
+                {
+                    let Y = [];
+                    for (let x = 0; x < 158; x++)
+                    {
+                        Y.push(0);
+                    }
+                    clone.push(Y);
+                }
+
+                for (let y = 0; y < 158; y++)
+                {
+                    for (let x = 0; x < 158; x++)
+                    {
+                        if (table.board[y][x] > 3)
+                        {
+                            if (table.topple == 0)
+                            {
+                                clone[y][x] += table.board[y][x] - 4;
+                                for (d = 0; d < 4; d++)
+                                {
+                                    if (d == 0 && y > 0)   clone[y - 1][x] += 1;
+                                    if (d == 1 && x < 157) clone[y][x + 1] += 1;
+                                    if (d == 2 && y < 157) clone[y + 1][x] += 1;
+                                    if (d == 3 && x > 0)   clone[y][x - 1] += 1;
+                                    if (d == 0 && y == 0   && table.wrap) clone[157][x] += 1;
+                                    if (d == 1 && x == 157 && table.wrap) clone[y][0] += 1;
+                                    if (d == 2 && y == 157 && table.wrap) clone[0][x] += 1;
+                                    if (d == 3 && x == 0   && table.wrap) clone[y][157] += 1;
+                                }
+                            }
+                            if (table.topple == 1)
+                            {
+                                if (table.board[y][x] > 4)
+                                {
+                                    amount = table.board[y][x] / 5 | 0;
+                                    clone[y][x] += (table.board[y][x] % 5) + amount;
+                                    for (d = 0; d < 4; d++)
+                                    {
+                                        if (d == 0 && y > 0)   clone[y - 1][x] += amount;
+                                        if (d == 1 && x < 157) clone[y][x + 1] += amount;
+                                        if (d == 2 && y < 157) clone[y + 1][x] += amount;
+                                        if (d == 3 && x > 0)   clone[y][x - 1] += amount;
+                                        if (d == 0 && y == 0   && table.wrap) clone[157][x] += amount;
+                                        if (d == 1 && x == 157 && table.wrap) clone[y][0] += amount;
+                                        if (d == 2 && y == 157 && table.wrap) clone[0][x] += amount;
+                                        if (d == 3 && x == 0   && table.wrap) clone[y][157] += amount;
+                                    }
+                                }
+                                if (table.board[y][x] == 4)
+                                {
+                                    clone[y][x] += table.board[y][x] - 4;
+                                    for (d = 0; d < 4; d++)
+                                    {
+                                        if (d == 0 && y > 0)   clone[y - 1][x] += 1;
+                                        if (d == 1 && x < 157) clone[y][x + 1] += 1;
+                                        if (d == 2 && y < 157) clone[y + 1][x] += 1;
+                                        if (d == 3 && x > 0)   clone[y][x - 1] += 1;
+                                        if (d == 0 && y == 0   && table.wrap) clone[157][x] += 1;
+                                        if (d == 1 && x == 157 && table.wrap) clone[y][0] += 1;
+                                        if (d == 2 && y == 157 && table.wrap) clone[0][x] += 1;
+                                        if (d == 3 && x == 0   && table.wrap) clone[y][157] += 1;
+                                    }
+                                }
+                            }
+                            if (table.topple == 2)
+                            {
+                                amount = table.board[y][x] / 4 | 0;
+                                clone[y][x] += table.board[y][x] % 4;
+                                for (d = 0; d < 4; d++)
+                                {
+                                    if (d == 0 && y > 0)   clone[y - 1][x] += amount;
+                                    if (d == 1 && x < 157) clone[y][x + 1] += amount;
+                                    if (d == 2 && y < 157) clone[y + 1][x] += amount;
+                                    if (d == 3 && x > 0)   clone[y][x - 1] += amount;
+                                    if (d == 0 && y == 0   && table.wrap) clone[157][x] += amount;
+                                    if (d == 1 && x == 157 && table.wrap) clone[y][0] += amount;
+                                    if (d == 2 && y == 157 && table.wrap) clone[0][x] += amount;
+                                    if (d == 3 && x == 0   && table.wrap) clone[y][157] += amount;
+                                }
+                            }
+                        }
+                        else
+                            clone[y][x] += table.board[y][x];
+                    }
+                }
+                table.board = clone;
+            }
+
+            draw();
+
+            setTimeout(() => topple(), 1000 / table.speed);
+        }
+        ruleChange = (rule) => {
+            if (rule == 0) // PAUSE
+            {
+                pause = document.getElementById("pause");
+                table.paused = !table.paused;
+                if (table.paused)
+                {
+                    pause.innerText = "PLAY";
+                    pause.title = "Start the engine";
+                }
+                else
+                {
+                    pause.innerText = "PAUSE";
+                    pause.title = "Stop the engine";
+                }
+                return;
+            }
+            if (rule == 1) // TOGGLE TOPPLE CHANGE FORWARDS
+            {
+                table.topple = table.topple == 2 ? 0 : table.topple + 1;
+                let name = ["SLOW", "EVEN", "FAST"];
+                let flavor = [
+                    "If a pile has more than 3 sand, it will give one to each of its adjacent cells every frame",
+                    "If a pile has 4 sand, it will give one to each of its adjacent cells every fram.\nIf a pile has more than 4 sand, it will evenly distribute all of its sand between itself and its 4 adjacent cells",
+                    "If a pile has more than 3 sand, it will evenly distribute all of its sand between its 4 adjacent cells" ];
+
+                document.getElementById("topple").innerText = name[table.topple];
+                document.getElementById("topple").title = flavor[table.topple];
+            }
+            if (rule == 2) // TOGGLE TOPPLE CHANGE BACKWARDS
+            {
+                table.topple = table.topple == 0 ? 2 : table.topple - 1;
+                let name = ["SLOW", "EVEN", "FAST"];
+                let flavor = [
+                    "If a pile has more than 3 sand, it will give one to each of its adjacent cells every frame",
+                    "If a pile has 4 sand, it will give one to each of its adjacent cells every fram.\nIf a pile has more than 4 sand, it will evenly distribute all of its sand between itself and its 4 adjacent cells",
+                    "If a pile has more than 3 sand, it will evenly distribute all of its sand between its 4 adjacent cells" ];
+
+                document.getElementById("topple").innerText = name[table.topple];
+                document.getElementById("topple").title = flavor[table.topple];
+            }
+            if (rule == 3) // SPEED
+            {
+                table.speed = document.getElementById("slider").value;
+                document.getElementById("speed").innerText = table.speed + " FPS";
+                return;
+            }
+            if (rule == 4) // WRAP
+            {
+                let wrap = document.getElementById("wrap");
+                table.wrap = !table.wrap;
+                wrap.classList.remove(!table.wrap);
+                wrap.classList.add(table.wrap);
+                return;
+            }
+            if (rule == 5) // COLOR NEXT
+            {
+            }
+            if (rule == 6) // COLOR PREV
+            {
+            }
+            if (rule == 7) // GRID
+            {
+                let grid = document.getElementById("grid");
+                table.grid = !table.grid;
+                grid.classList.remove(!table.grid);
+                grid.classList.add(table.grid);
+                return;
+            }
+        }
+
+        document.getElementById("clear").addEventListener("click", () => clear());
+        document.addEventListener("keydown", (e) => {
+            switch (e.key)
+            {
+                case " ": ruleChange(0);
+            }
+        });
+        convas.addEventListener("mousemove", (e) => {
+            findxy('move', e)
+        }, false);
+        convas.addEventListener("mousedown", (e) => {
+            findxy('down', e);
+            blur();
+        }, false);
+        convas.addEventListener("mouseup", (e) => {
+            findxy('up', e)
+        }, false);
+        convas.addEventListener("mouseout", (e) => {
+            findxy('out', e)
+        }, false);
+        findxy = (res, e) => {
+            if (res == 'down') {
+                let prevX = table.cursor[0];
+                let prevY = table.cursor[1];
+                let currX = e.offsetX / 6 | 0;
+                let currY = e.offsetY / 6 | 0;
+                table.drawType = e.button == 0 ? 1 : 0;
+                table.board[currY][currX] = table.drawType;
+                table.flag = true;
+                table.cursor = [currX, currY];
+                draw();
+            }
+            if (res == 'up' || res == "out") {
+                table.flag = false;
+                table.cursor = false;
+            }
+            if (res == 'move') {
+                let prevX = table.cursor[0];
+                let prevY = table.cursor[1];
+                let currX = e.offsetX / 6 | 0;
+                let currY = e.offsetY / 6 | 0;
+                table.cursor = [currX, currY];
+                if (table.flag)
+                {
+                    for (let i = 0; i <= Math.sqrt((Math.abs(prevX - currX) ** 2) + (Math.abs(prevY - currY) ** 2) | 0); i++)
+                        table.board[prevY + ((currY - prevY) / (i == 0 ? 1 : i)) | 0][prevX + ((currX - prevX) / (i == 0 ? 1 : i)) | 0] = table.drawType;
+                }
+            }
+        }
+        start();
+        topple();
+    </script>
+</html>
