@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<!--
+    @TODO:
+    Nothing :)
+-->
+<head>
+    <link rel="icon" type="image/png" href="life.png">
+</head>
+<body oncontextmenu="return false">
+    <canvas id="conway" height=948 width=1398></canvas>
+    <div id="player">
+        <text   class="left">PLAYER</text>
+        <text   class="right">CANVAS</text><br>
+        <button class="left  player"  id="pause"  onclick="ruleChange(0); blur()"      title="Start the engine" oncontextmenu="blur()">PLAY</button>
+        <button class="right  player"             onclick="random(); blur()"           title="Randomize the activity of every cell in the canvas" oncontextmenu="blur()">RANDOM</button><br>
+        <button class="left  player"              onclick="table.frame = true; blur()" title="Generate the next frame (engine must be paused)" oncontextmenu="blur()">STEP</button>
+        <button class="right  player" id="clear"  onclick="blur()"                     title="Set all cells to inactive" oncontextmenu="blur()">CLEAR</button><br>
+        <button class="speed  button" id="speed"  onclick="blur()"                     title="Set how many frames per second (FPS) the engine runs in" oncontextmenu="blur()" disabled>60 FPS</button>
+        <input  class="slider"        id="slider" onclick="blur()" oninput="ruleChange(19);" type="range" min="10" max="100" value="60"><br><br>
+        <text   class="middle">CELL COUNT</text><br>
+        <button class="middle"        id="activeCount"   title="Active Cells" oncontextmenu="blur()" disabled>0</button>
+        <button class="middle"        id="inactiveCount" title="Inactive Cells" oncontextmenu="blur()" disabled>0</button><br><br>
+        RULES OF LIFE<br>
+        <div    class="left activation">
+        <button class="setting"    title="For a given active cell, the number of adjacent cells that must be active for it to become inactive" oncontextmenu="blur()" disabled>DEATH</button>
+        <button class="rule true"  id="death1" onclick="ruleChange(1); blur()" title="Active active cells with 0 active adjacent cells will become inactive" oncontextmenu="blur()">0</button>
+        <button class="rule true"  id="death2" onclick="ruleChange(2); blur()" title="Active active cells with 1 active adjacent cells will become inactive" oncontextmenu="blur()">1</button>
+        <button class="rule false" id="death3" onclick="ruleChange(3); blur()" title="Active active cells with 2 active adjacent cells will become inactive" oncontextmenu="blur()">2</button><br>
+        <button class="rule false" id="death4" onclick="ruleChange(4); blur()" title="Active active cells with 3 active adjacent cells will become inactive" oncontextmenu="blur()">3</button>
+        <button class="rule true"  id="death5" onclick="ruleChange(5); blur()" title="Active active cells with 4 active adjacent cells will become inactive" oncontextmenu="blur()">4</button>
+        <button class="rule true"  id="death6" onclick="ruleChange(6); blur()" title="Active active cells with 5 active adjacent cells will become inactive" oncontextmenu="blur()">5</button><br>
+        <button class="rule true"  id="death7" onclick="ruleChange(7); blur()" title="Active active cells with 6 active adjacent cells will become inactive" oncontextmenu="blur()">6</button>
+        <button class="rule true"  id="death8" onclick="ruleChange(8); blur()" title="Active active cells with 7 active adjacent cells will become inactive" oncontextmenu="blur()">7</button>
+        <button class="rule true"  id="death9" onclick="ruleChange(9); blur()" title="Active active cells with 8 active adjacent cells will become inactive" oncontextmenu="blur()">8</button><br>
+        </div>
+        <div    class="right activation">
+        <button class="setting"    title="For a given inactive cell, the number of adjacent cells that must be active for it to become active" oncontextmenu="blur()" disabled>BIRTH</button>
+        <button class="rule false" id="birth1" onclick="ruleChange(10); blur()" title="Active inactive cells with 0 active adjacent cells will become active" oncontextmenu="blur()">0</button>
+        <button class="rule false" id="birth2" onclick="ruleChange(11); blur()" title="Active inactive cells with 1 active adjacent cells will become active" oncontextmenu="blur()">1</button>
+        <button class="rule false" id="birth3" onclick="ruleChange(12); blur()" title="Active inactive cells with 2 active adjacent cells will become active" oncontextmenu="blur()">2</button><br>
+        <button class="rule true"  id="birth4" onclick="ruleChange(13); blur()" title="Active inactive cells with 3 active adjacent cells will become active" oncontextmenu="blur()">3</button>
+        <button class="rule false" id="birth5" onclick="ruleChange(14); blur()" title="Active inactive cells with 4 active adjacent cells will become active" oncontextmenu="blur()">4</button>
+        <button class="rule false" id="birth6" onclick="ruleChange(15); blur()" title="Active inactive cells with 5 active adjacent cells will become active" oncontextmenu="blur()">5</button><br>
+        <button class="rule false" id="birth7" onclick="ruleChange(16); blur()" title="Active inactive cells with 6 active adjacent cells will become active" oncontextmenu="blur()">6</button>
+        <button class="rule false" id="birth8" onclick="ruleChange(17); blur()" title="Active inactive cells with 7 active adjacent cells will become active" oncontextmenu="blur()">7</button>
+        <button class="rule false" id="birth9" onclick="ruleChange(18); blur()" title="Active inactive cells with 8 active adjacent cells will become active" oncontextmenu="blur()">8</button><br>
+        </div>
+        <button class="middle setting true"     id="wrap"   onclick="ruleChange(20); blur()" title="Cells ignore the canvas borders and are able to affect cells on the opposite edge" oncontextmenu="blur()">WRAP</button><br>
+        <button class="middle setting false"    id="grid"   onclick="ruleChange(23); blur()" title="All cells have a light border around them" oncontextmenu="blur()">GRID</button><br>
+        <button class="middle setting nocolor"  id="color"  onclick="ruleChange(21); blur()" title="Change the color of active cells that have been active for fewer than 16 frames&#10;* May impact framerate" oncontextmenu="ruleChange(22); blur()">COLOR</button><br>
+        <button class="middle setting true"     id="invert" onclick="preset(); blur()"       title="Enable all inactive table and disable all active table" oncontextmenu="blur()">INVERT</button><br><br>
+        RULE PRESETS<br>
+        <button class="left"  onclick="preset(0); blur()"  oncontextmenu="blur()">LIFE</button>
+        <button class="right" onclick="preset(1); blur()"  oncontextmenu="blur()">INVERTED LIFE</button><br>
+        <button class="left"  onclick="preset(2); blur()"  oncontextmenu="blur()">LONG LIFE</button>
+        <button class="right" onclick="preset(3); blur()"  oncontextmenu="blur()">HIGH LIFE</button><br>
+        <button class="left"  onclick="preset(4); blur()"  oncontextmenu="blur()">AMOEBA</button>
+        <button class="right" onclick="preset(5); blur()"  oncontextmenu="blur()">DIAMOEBA</button><br>
+        <button class="left"  onclick="preset(6); blur()"  oncontextmenu="blur()">MAZE</button>
+        <button class="right" onclick="preset(7); blur()"  oncontextmenu="blur()">REPLICATOR</button><br>
+        <button class="left"  onclick="preset(8); blur()"  oncontextmenu="blur()">WALLED CITIES</button>
+        <button class="right" onclick="preset(9); blur()"  oncontextmenu="blur()">CORAL</button><br>
+        <button class="left"  onclick="preset(10); blur()" oncontextmenu="blur()">DAY AND NIGHT</button>
+        <button class="right" onclick="preset(11); blur()" oncontextmenu="blur()">STAINS</button>
+    </div>
+</body>
+<html>
+    <title>Conway's Game of Life - hover over buttons for a description of what they do</title>
+    <style>
+        body { user-select: none; }
+        button {
+            background-color: #8ee;
+            border-color: #7cc;
+            border-radius: 5px;
+            color: #000;
+            font-size: 28px;
+            height: 38px;
+            cursor: pointer;
+            outline: none; }
+        canvas {
+            border-width: 2px;
+            border-style: outset;
+            border-color: #abc;
+            border-radius: 3px; }
+        #activeCount {
+            background-color: #000;
+            border-color: #666;
+            color: #fff;
+            width: 100px; }
+        #color.dark {
+            background-image: linear-gradient(to right, #eee, #000);
+            color: #fff; }
+        #color.invert {
+            background-color: #fff;
+            color: #000; }
+        #color.darkinvert {
+            background-image: linear-gradient(to left, #eee, #000);
+            color: #fff; }
+        #color.redlight {
+            background-image: linear-gradient(to right, #fdd, #f00, #000);
+            color: #fff; }
+        #color.reddark {
+            background-image: linear-gradient(to right,#f00, #000);
+            color: #fff; }
+        #color.redlightinvert {
+            background-image: linear-gradient(to left, #fdd, #f00);
+            color: #fff; }
+        #color.reddarkinvert {
+            background-image: linear-gradient(to left,#f00, #000);
+            color: #fff; }
+        #color.greenlight {
+            background-image: linear-gradient(to right, #dfd, #0f0, #000);
+            color: #fff; }
+        #color.greendark {
+            background-image: linear-gradient(to right,#0f0, #000);
+            color: #fff; }
+        #color.greenlightinvert {
+            background-image: linear-gradient(to left, #dfd, #0f0);
+            color: #fff; }
+        #color.greendarkinvert {
+            background-image: linear-gradient(to left,#0f0, #000);
+            color: #fff; }
+        #color.bluelight {
+            background-image: linear-gradient(to right, #ddf, #00f, #000);
+            color: #fff; }
+        #color.bluedark {
+            background-image: linear-gradient(to right,#00f, #000);
+            color: #fff; }
+        #color.bluelightinvert {
+            background-image: linear-gradient(to left, #ddf, #00f);
+            color: #fff; }
+        #color.bluedarkinvert {
+            background-image: linear-gradient(to left,#00f, #000);
+            color: #fff; }
+        #color.nocolor {
+            background-color: #000;
+            color: #fff; }
+        #color.rainbow {
+            background-image: linear-gradient(to right, #f00, #aa0, #0f0, #0aa, #00f, #808, #000);
+            color: #fff; }
+        #color.rainbowInvert {
+            background-image: linear-gradient(to right, #808, #00f, #0aa, #0f0, #aa0, #f00, #000);
+            color: #fff; }
+        #dotCount { background-image: linear-gradient(to right, #111, #fff); }
+        #inactiveCount {
+            background-color: #fff;
+            border-color: #aaa;
+            color: #000;
+            width: 100px; }
+        #player {
+            position: fixed;
+            top: 8px;
+            left: 1417px;
+            width: 400px;
+            text-align: center;
+            line-height: 40px;
+            font-size: 200%; }
+        .activation {
+            background-color: #789;
+            width: 120px;
+            height: 162px;
+            border-radius: 5px 5px 4px 4px; }
+        .activation > .setting {
+            position: relative;
+            top: -3px; }
+        .activation > .rule {
+            position: relative;
+            top: -3px;
+            width: 38px;
+            margin: 1px -3px 0px -3px; }
+        .false { background-color: #dc143c; }
+        .left {
+            position: absolute;
+            left: 0px; }
+        .middle {
+            position: relative;
+            right: 4px;
+            bottom: 3px; }
+        .player {
+            width: 140px;
+            text-align: center; }
+        .right {
+            position: absolute;
+            right: 8px; }
+        .setting {
+            padding: 0px;
+            white-space: nowrap;
+            width: 120px; }
+        .slider {
+            -webkit-appearance: none;
+            width: 250px;
+            height: 15px;
+            border-radius: 5px;
+            background: #d3d3d3;
+            outline: none;
+        }
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 25px;
+            height: 25px;
+            background: #8ee;
+            border-color: #f00;
+            border-width: 2px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .speed { width: 125px; }
+        .true { background-color: #7fff00; }
+    </style>
+    <script>
+        var convas = document.getElementById("conway");
+        var ctx = convas.getContext("2d");
+        var table = {
+            birth: [false, false, false, true, false, false, false, false, false],
+            board: [],
+            color: 0,
+            cursor: false,
+            death: [true, true, false, false, true, true, true, true, true],
+            drawType: 0,
+            grid: false,
+            paused: true,
+            speed: 60,
+            wrap: true
+        }
+
+        draw = () => {
+            let data = ctx.getImageData(0, 0, 1398, 948);
+            let count = [0, 0];
+            for (let y = 158; y--;)
+            {
+                for (let x = 233; x--;)
+                {
+                    let a = table.board[y][x];
+                    for (let i = 0; i < 36; i++)
+                    {
+                        data.data[((y * 6 + (i / 6 | 0)) * 1398 + (x * 6 + (i % 6))) * 4 + 3] = 255;
+
+                        let r, g, b;
+                        switch (table.color)
+                        { // 0 = black     | white
+                            case 0: r = g = b = a > 0 ? 0 : 255; break;
+                            // 1 = white     | black
+                            case 1: r = g = b = a > 0 ? 255 : 0; break;
+                            // 2 = white > black   | white
+                            case 2: r = g = b = a > 0 ? 255 - a * (255 / 16) : 255; break;
+                            // 3 = black > white   | black
+                            case 3: r = g = b = a > 0 ? a * (255 / 16) : 0; break;
+                            // 4 = white > red > black  | white
+                            case 4: r = a > 0 ? 510 - (a * (255 / 8)) : 255;
+                                    g = b = a > 0 ? 255 - (a * (255 / 8)) : 255; break;
+                            // 5 = white > green > black | white
+                            case 5: g = a > 0 ? 510 - (a * (255 / 8)) : 255;
+                                    r = b = a > 0 ? 255 - (a * (255 / 8)) : 255; break;
+                            // 6 = white > blue > black | white
+                            case 6: b =  a > 0 ? 510 - (a * (255 / 8)) : 255;
+                                    r = g = a > 0 ? 255 - (a * (255 / 8)) : 255; break;
+                            // 7 = red > black    | white
+                            case 7: r = a > 0 ? 255 - (a * (255 / 16)) : 255;
+                                    g = b = 0; break;
+                            // 8 = green > black   | white
+                            case 8: g = a > 0 ? 255 - (a * (255 / 16)) : 255;
+                                    r = b = 0; break;
+                            // 9 = blue > black   | white
+                            case 9: b = a > 0 ? 255 - (a * (255 / 16)) : 255;
+                                    r = g = 0; break;
+                            // 10 = black > red > white | black
+                            case 10:r =  a > 0 ? a * (510 / 16) : 0;
+                                    g = b = (a * (510 / 16)) - 255; break;
+                            // 11 = black > green > white | black
+                            case 11:g =  a > 0 ? a * (510 / 16) : 0;
+                                    r = b = (a * (510 / 16)) - 255; break;
+                            // 12 = black > blue > white | black
+                            case 12:b =  a > 0 ? a * (510 / 16) : 0;
+                                    r = g = (a * (510 / 16)) - 255; break;
+                            // 13 = red > white   | black
+                            case 13:r =  255;
+                                    g = b = a > 0 ? a * (255 / 16) : 0; break;
+                            // 14 = green > white   | black
+                            case 14:g =  255;
+                                    r = b = a > 0 ? a * (255 / 16) : 0; break;
+                            // 15 = blue > white   | black
+                            case 15:b =  255;
+                                    r = g = a > 0 ? a * (255 / 16) : 0; break;
+                            // 16 = rainbow > black  | white
+                            case 16:r = a > 0 ? a <= 5 || a >= 12 ? Math.cos(((a - (a <= 5 ? 1 : 11)) * Math.PI) / 10) * 255 * (a >= 12 ? (a - 11) / 5 : 1) : 0 : 255;
+                                    g = a > 0 ? Math.sin(((a - 1) * Math.PI) / 10) * 255 : 255;
+                                    b = a > 0 ? a >= 7 ? Math.sin(((a - 6) * Math.PI) / 10) * 255 * (a >= 12 ? (5 - (a - 11)) / 5 : 1) : 0 : 255; break;
+                            // 17 = rainbow > white  | black
+                            case 17:r = a > 0 ? a <= 5 || a >= 12 ? Math.cos(((a - (a <= 5 ? 1 : 11)) * Math.PI) / 10) * 255 * (a >= 12 ? (a - 11) / 5 : 1) : 0 : 255;
+                                    g = a > 0 ? Math.sin(((16 - a) * Math.PI) / 10) * 255 : 255;
+                                    b = a > 0 ? a >= 7 ? Math.sin(((a - 6) * Math.PI) / 10) * 255 * (a >= 12 ? (5 - (a - 11)) / 5 : 1) : 0 : 255; break;
+                        }
+                        data.data[((y * 6 + (i / 6 | 0)) * 1398 + (x * 6 + (i % 6))) * 4 + 0] = r;
+                        data.data[((y * 6 + (i / 6 | 0)) * 1398 + (x * 6 + (i % 6))) * 4 + 1] = g;
+                        data.data[((y * 6 + (i / 6 | 0)) * 1398 + (x * 6 + (i % 6))) * 4 + 2] = b;
+
+                        if (table.grid)
+                            if (i < 6 || i > 29 ||i % 6 == 0 || i % 6 == 5)
+                            {
+                                data.data[((y * 6 + (i / 6 | 0)) * 1398 + (x * 6 + (i % 6))) * 4 + 0] += 100;
+                                data.data[((y * 6 + (i / 6 | 0)) * 1398 + (x * 6 + (i % 6))) * 4 + 1] += 100;
+                                data.data[((y * 6 + (i / 6 | 0)) * 1398 + (x * 6 + (i % 6))) * 4 + 2] += 100;
+                                data.data[((y * 6 + (i / 6 | 0)) * 1398 + (x * 6 + (i % 6))) * 4 + 3] = 255;
+                                data.data[((y * 6 + (i / 6 | 0)) * 1398 + (x * 6 + (i % 6))) * 4 + 0] /= 2;
+                                data.data[((y * 6 + (i / 6 | 0)) * 1398 + (x * 6 + (i % 6))) * 4 + 1] /= 2;
+                                data.data[((y * 6 + (i / 6 | 0)) * 1398 + (x * 6 + (i % 6))) * 4 + 2] /= 2;
+                            }
+
+                        if (table.cursor && (
+                            (x == table.cursor[0] + 1 && y == table.cursor[1] && i % 6 < 2) ||
+                            (x == table.cursor[0] - 1 && y == table.cursor[1] && i % 6 > 3) ||
+                            (y == table.cursor[1] + 1 && x == table.cursor[0] && i < 12) ||
+                            (y == table.cursor[1] - 1 && x == table.cursor[0] && i > 23) ||
+                            (x == table.cursor[0] + 1 && y == table.cursor[1] + 1 && i == 0) ||
+                            (x == table.cursor[0] - 1 && y == table.cursor[1] + 1 && i == 5) ||
+                            (x == table.cursor[0] + 1 && y == table.cursor[1] - 1 && i == 30) ||
+                            (x == table.cursor[0] - 1 && y == table.cursor[1] - 1 && i == 35)))
+                            {
+                                data.data[((y * 6 + (i / 6 | 0)) * 1398 + (x * 6 + (i % 6))) * 4 + 0] = a > 0 ? 255 - data.data[((y * 6 + (i / 6 | 0)) * 1398 + (x * 6 + (i % 6))) * 4 + 0] : 0;
+                                data.data[((y * 6 + (i / 6 | 0)) * 1398 + (x * 6 + (i % 6))) * 4 + 1] = a > 0 ? 255 - data.data[((y * 6 + (i / 6 | 0)) * 1398 + (x * 6 + (i % 6))) * 4 + 1] : 0;
+                                data.data[((y * 6 + (i / 6 | 0)) * 1398 + (x * 6 + (i % 6))) * 4 + 2] = a > 0 ? 255 - data.data[((y * 6 + (i / 6 | 0)) * 1398 + (x * 6 + (i % 6))) * 4 + 2] : 0;
+                                data.data[((y * 6 + (i / 6 | 0)) * 1398 + (x * 6 + (i % 6))) * 4 + 3] = 255;
+                            }
+                    }
+
+                    if (a > 0)
+                        count[0]++;
+                    else
+                        count[1]++;
+                }
+            }
+            document.getElementById("activeCount").innerText = count[0];
+            document.getElementById("inactiveCount").innerText = count[1];
+            ctx.putImageData(data, 0, 0);
+        }
+        random = () => {
+            table.board = [];
+            for (let y = 158; y--;)
+            {
+                let a = [];
+                for (let x = 233; x--;)
+                {
+                    let b = Math.random() * 2 | 0;
+                    a.push(b);
+                }
+                table.board.push(a);
+            }
+        }
+        clear = () => {
+            table.board = [];
+            for (let y = 158; y--;)
+            {
+                let a = [];
+                for (let x = 233; x--;)
+                    a.push(0);
+                table.board.push(a);
+            }
+        }
+        step = () => {
+            if (!table.paused || table.frame)
+            {
+                table.frame = false;
+                let clone = [];
+                ctx.scale(1 / 3, 1 / 3);
+                for (let y = 0; y < 158; y++)
+                {
+                    let a = [];
+                    for (let x = 0; x < 233; x++)
+                    {
+                        let adj = 0;
+                        let b;
+                        for (let d = 0; d < 8; d++)
+                        {
+                            if (table.wrap)
+                                adj += table.board[y + [y == 0 ? 157 : -1, y == 0 ? 157 : -1, 0, y == 157 ? -157 : 1, y == 157 ? -157 : 1, y == 157 ? -157 : 1, 0, y == 0 ? 157 : -1][d]][x + [0, x  == 232 ? -232 : 1, x  == 232 ? -232 : 1, x  == 232 ? -232 : 1, 0, x == 0 ? 232 : -1, x == 0 ? 232 : -1, x == 0 ? 232 : -1][d]] > 0 ? 1 : 0;
+                            else
+                            if (!((y == 0   && [0, 1, 7].includes(d)) ||
+                                (y == 157 && [3, 4, 5].includes(d)) ||
+                                (x == 0   && [5, 6, 7].includes(d)) ||
+                                (x == 232 && [1, 2, 3].includes(d))))
+                                adj += table.board[y + [-1, -1, 0, 1, 1, 1, 0, -1][d]][x + [0, 1, 1, 1, 0, -1, -1, -1][d]] > 0 ? 1 : 0;
+                        }
+                        if (table.board[y][x] > 0 && table.death[adj])
+                            b = 0;
+                        else
+                        if (table.board[y][x] == 0 && table.birth[adj])
+                            b = 1;
+                        else
+                        if (table.board[y][x] > 0 && table.board[y][x] < 16)
+                            b = table.board[y][x] + 1;
+                        else
+                            b = table.board[y][x];
+
+                        a.push(b);
+                    }
+                    clone.push(a);
+                }
+                table.board = clone;
+            }
+
+            draw();
+
+            setTimeout(() => step(), 1000 / table.speed);
+        }
+        ruleChange = (rule) => {
+            if (rule == 0) // PAUSE
+            {
+                pause = document.getElementById("pause");
+                table.paused = !table.paused;
+                if (table.paused)
+                {
+                    pause.innerText = "PLAY";
+                    pause.title = "Start the engine";
+                }
+                else
+                {
+                    pause.innerText = "PAUSE";
+                    pause.title = "Stop the engine";
+                }
+                return;
+            }
+            if (rule > 0 && rule < 19) // ACTIVATION RULES
+            {
+                if (rule < 10)
+                {
+                    let death = document.getElementById("death" + rule);
+                    table.death[rule - 1] = !table.death[rule - 1];
+                    death.classList.remove(!table.death[rule - 1]);
+                    death.classList.add(table.death[rule - 1]);
+                }
+                else
+                {
+                    let birth = document.getElementById("birth" + (rule - 9));
+                    table.birth[rule - 10] = !table.birth[rule - 10];
+                    birth.classList.remove(!table.birth[rule - 10]);
+                    birth.classList.add(table.birth[rule - 10]);
+                }
+                return;
+            }
+            if (rule == 19) // SPEED
+            {
+                table.speed = document.getElementById("slider").value;
+                document.getElementById("speed").innerText = table.speed + " FPS";
+                return;
+            }
+            if (rule == 20) // WRAP
+            {
+                let wrap = document.getElementById("wrap");
+                table.wrap = !table.wrap;
+                wrap.classList.remove(!table.wrap);
+                wrap.classList.add(table.wrap);
+                return;
+            }
+            if (rule == 21) // COLOR NEXT
+            {
+                let color = document.getElementById("color");
+                table.color = table.color == 17 ? 0 : table.color + 1;
+                color.classList.remove(["rainbow", "rainbowinvert", "nocolor", "invert", "dark", "darkinvert", "redlight", "greenlight", "bluelight", "reddark", "greendark", "bluedark", "redlightinvert", "greenlightinvert", "bluelightinvert", "reddarkinvert", "greendarkinvert", "bluedarkinvert"][table.color]);
+                color.classList.add(["nocolor", "invert", "dark", "darkinvert", "redlight", "greenlight", "bluelight", "reddark", "greendark", "bluedark", "redlightinvert", "greenlightinvert", "bluelightinvert", "reddarkinvert", "greendarkinvert", "bluedarkinvert", "rainbow", "rainbowinvert"][table.color]);
+                return;
+            }
+            if (rule == 22) // COLOR PREV
+            {
+                let color = document.getElementById("color");
+                table.color = table.color == 0 ? 17 : table.color - 1;
+                color.classList.remove(["invert", "dark", "darkinvert", "redlight", "greenlight", "bluelight", "reddark", "greendark", "bluedark", "redlightinvert", "greenlightinvert", "bluelightinvert", "reddarkinvert", "greendarkinvert", "bluedarkinvert", "rainbow", "rainbowinvert", "nocolor"][table.color]);
+                color.classList.add(["nocolor", "invert", "dark", "darkinvert", "redlight", "greenlight", "bluelight", "reddark", "greendark", "bluedark", "redlightinvert", "greenlightinvert", "bluelightinvert", "reddarkinvert", "greendarkinvert", "bluedarkinvert", "rainbow", "rainbowinvert"][table.color]);
+                return;
+            }
+            if (rule == 23) // GRID
+            {
+                let grid = document.getElementById("grid");
+                table.grid = !table.grid;
+                grid.classList.remove(!table.grid);
+                grid.classList.add(table.grid);
+                return;
+            }
+        }
+        preset = (a) => {
+            if (typeof a != "undefined")
+            {
+                let p = [
+                    // LIFE
+                    { death: [true, true, false, false, true, true, true, true, true],
+                    birth: [false, false, false, true, false, false, false, false, false] },
+                    // INVERSE LIFE
+                    { death: [true, true, true, false, false, true, false, false, false],
+                    birth: [true, true, true, true, true, false, false, true, true] },
+                    // LONG LIFE
+                    { death: [true, true, true, true, true, false, true, true, true],
+                    birth: [false, false, false, true, true, true, false, false, false] },
+                    // HIGH LIFE
+                    { death: [true, true, false, false, true, true, true, true, true],
+                    birth: [false, false, false, true, false, false, true, false, false] },
+                    // AMOEBA
+                    { death: [true, false, true, false, true, false, true, true, false],
+                    birth: [false, false, false, true, false, true, false, true, false] },
+                    // DIAMOEBA
+                    { death: [true, true, true, true, true, false, false, false, false],
+                    birth: [false, false, false, true, false, true, true, true, true] },
+                    // MAZE
+                    { death: [true, false, false, false, false, false, true, true, true],
+                    birth: [false, false, false, true, false, false, false, false, false] },
+                    // REPLICATOR
+                    { death: [true, false, true, false, true, false, true, false, true],
+                    birth: [false, true, false, true, false, true, false, true, false] },
+                    // WALLED CITIES
+                    { death: [true, true, false, false, false, false, true, true, true],
+                    birth: [false, false, false, false, true, true, true, true, true] },
+                    // CORAL
+                    { death: [true, true, true, true, false, false, false, false, false],
+                    birth: [false, false, false, true, false, false, false, false, false] },
+                    // DAY AND NIGHT
+                    { death: [true, true, true, false, false, true, false, false, false],
+                    birth: [false, false, false, true, false, false, true, true, true] },
+                    // STAINS
+                    { death: [true, true, false, false, true, false, false, false, false],
+                    birth: [false, false, false, true, false, false, true, true, true] }
+                ][a];
+
+                for (let i = 0; i < 9; i++)
+                {
+                    if (table.death[i] != p.death[i])
+                    {
+                        let death = document.getElementById("death" + (i + 1));
+                        table.death[i] = !table.death[i];
+                        death.classList.remove(!table.death[i]);
+                        death.classList.add(table.death[i]);
+                    }
+                    if (table.birth[i] != p.birth[i])
+                    {
+                        let birth = document.getElementById("birth" + (i + 1));
+                        table.birth[i] = !table.birth[i];
+                        birth.classList.remove(!table.birth[i]);
+                        birth.classList.add(table.birth[i]);
+                    }
+                }
+            }
+            else
+            {
+                let invert = document.getElementById("invert");
+                if (invert.classList.contains("true"))
+                {
+                    invert.classList.remove("true");
+                    invert.classList.add("false");
+                }
+                else
+                {
+                    invert.classList.remove("false");
+                    invert.classList.add("true");
+                }
+
+                for (let i = 9; i--;)
+                {
+                    let death = document.getElementById("death" + (i + 1));
+                    table.death[i] = !table.death[i];
+                    death.classList.remove(!table.death[i]);
+                    death.classList.add(table.death[i]);
+
+                    let birth = document.getElementById("birth" + (i + 1));
+                    table.birth[i] = !table.birth[i];
+                    birth.classList.remove(!table.birth[i]);
+                    birth.classList.add(table.birth[i]);
+                }
+            }
+        }
+
+        document.getElementById("clear").addEventListener("click", () => clear());
+        document.addEventListener("keydown", (e) => {
+            switch (e.key)
+            {
+                case " ": ruleChange(0);
+            }
+        });
+        convas.addEventListener("mousemove", (e) => {
+            findxy('move', e)
+        }, false);
+        convas.addEventListener("mousedown", (e) => {
+            findxy('down', e);
+            blur();
+        }, false);
+        convas.addEventListener("mouseup", (e) => {
+            findxy('up', e)
+        }, false);
+        convas.addEventListener("mouseout", (e) => {
+            findxy('out', e)
+        }, false);
+        findxy = (res, e) => {
+            if (res == 'down') {
+                let prevX = table.cursor[0];
+                let prevY = table.cursor[1];
+                let currX = e.offsetX / 6 | 0;
+                let currY = e.offsetY / 6 | 0;
+                table.drawType = e.button == 0 ? 1 : 0;
+                table.board[currY][currX] = table.drawType;
+                table.flag = true;
+                table.cursor = [currX, currY];
+                draw();
+            }
+            if (res == 'up' || res == "out") {
+                table.flag = false;
+                table.cursor = false;
+            }
+            if (res == 'move') {
+                let prevX = table.cursor[0];
+                let prevY = table.cursor[1];
+                let currX = e.offsetX / 6 | 0;
+                let currY = e.offsetY / 6 | 0;
+                table.cursor = [currX, currY];
+                if (table.flag && (prevX != currX || prevY != currY))
+                {
+                    let dir = Math.abs(prevX - currX) >= Math.abs(prevY - currY) ? 0 : 1;
+                    let dis = dir == 0 ? Math.abs(prevX - currX) : Math.abs(prevY - currY);
+                    let slope = Math.abs(((currY - prevY) / (currX - prevX)));
+                    for (let i = 0; i < dis; i++)
+                    {
+                        let Y, X;
+                        if (dir == 0)
+                            Y = currY - Math.round(i * slope * (prevY > currY ? -1 : 1)),
+                            X = currX - (i * (prevX > currX ? -1 : 1));
+                        if (dir == 1 && slope == Infinity)
+                            Y = currY - (i * (prevY > currY ? -1 : 1)),
+                            X = currX;
+                        if (dir == 1 && slope != Infinity)
+                            Y = currY - (i * (prevY > currY ? -1 : 1)),
+                            X = currX - Math.round(i * (1 / slope) * (prevX > currX ? -1 : 1));
+                        table.board[Y][X] = table.drawType;
+                    }
+                }
+            }
+        }
+
+        random();
+        step();
+    </script>
+</html>
